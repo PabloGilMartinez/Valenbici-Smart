@@ -3,6 +3,8 @@ import pandas as pd
 import joblib
 import folium
 import requests
+import os          # <--- NUEVO
+import gdown       # <--- NUEVO
 from streamlit_folium import st_folium
 from math import radians, cos, sin, asin, sqrt
 import datetime
@@ -160,8 +162,37 @@ def load_data():
 st.set_page_config(page_title="Smart Valenbisi", layout="wide")
 
 df, df_promedios = load_data()
-model_bicis = joblib.load("model_bicis.pkl")
-model_huecos = joblib.load("model_huecos.pkl")
+
+# --- NUEVO CÓDIGO PARA DESCARGAR MODELOS DESDE DRIVE ---
+@st.cache_resource
+def cargar_modelos_drive():
+    # 1. Modelo de Bicis
+    id_bicis = '1l4SysWc7TSoKfpqW2omc7HGKXHs20lxj'  # <--- CAMBIA ESTO
+    url_bicis = f'https://drive.google.com/uc?id={id_bicis}'
+    ruta_bicis = 'model_bicis.pkl'
+    
+    if not os.path.exists(ruta_bicis):
+        with st.spinner('Descargando Modelo de Bicis desde Google Drive (solo la primera vez)...'):
+            gdown.download(url_bicis, ruta_bicis, quiet=False)
+            
+    # 2. Modelo de Huecos
+    id_huecos = '1pIqzwQVew8XCCT4MIZO_v_XBpZawAyoj' # <--- CAMBIA ESTO
+    url_huecos = f'https://drive.google.com/uc?id={id_huecos}'
+    ruta_huecos = 'model_huecos.pkl'
+    
+    if not os.path.exists(ruta_huecos):
+        with st.spinner('Descargando Modelo de Huecos...'):
+            gdown.download(url_huecos, ruta_huecos, quiet=False)
+
+    # Cargar en memoria
+    mod_bicis = joblib.load(ruta_bicis)
+    mod_huecos = joblib.load(ruta_huecos)
+    
+    return mod_bicis, mod_huecos
+
+# Ejecutamos la función
+model_bicis, model_huecos = cargar_modelos_drive()
+# --------------------------------------------------------
 
 # -----------------------
 # BARRA LATERAL (SELECTOR DE IDIOMA Y MENÚ)
